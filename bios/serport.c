@@ -1157,8 +1157,11 @@ static ULONG rsconf_duart(UBYTE port, EXT_IOREC *iorec, WORD baud, WORD ctrl, WO
     /* Write the Aux Control Register
      *
      */
+#ifdef MACHINE_TINY68K
+    write_duart(DUART_ACR, 0x70); /* ACR[7] = 0, timer mode, x16 prescaler */ /* ACR[7] = 0 so we get 38.4K */
+#else
     write_duart(DUART_ACR, 0xf0); /* ACR[7] = 1, timer mode, x16 prescaler */
-
+#endif
     /* For hardware flow control purposes, we need to *set* the RTS output port bit (bit 0 for 
      * port A, bit 1 for port B). Setting an output port bin cause the actual pin
      * to be zero, which is how we want to start (i.e., active-low RTS is asserted). 
@@ -1239,9 +1242,7 @@ void duart_rs232_enable_interrupt(void)
 
 static void init_duart(void)
 {
-    /* Disable interrupts. Will be configured by timer and serial interupts later. */
-    /* Baud rate stuff will be done by rsconf. */
-    write_duart(DUART_IMR, 0);
+    /* nothing to do here */
 }
 
 /*
@@ -1457,11 +1458,10 @@ void init_serport(void)
     iorecDUARTB.out.buf = obufDUARTB;
 #endif /* CONF_WITH_DUART_CHANNEL_B */
     if (has_duart) {
-        rsconfDUARTA(B9600, 0, 0x88, 0, 0, 0);
+        rsconfDUARTA(DEFAULT_BAUDRATE, 0, 0x88, 0, 0, 0);
 #if CONF_WITH_DUART_CHANNEL_B
-        rsconfDUARTB(B9600, 0, 0x88, 0, 0, 0);
+        rsconfDUARTB(DEFAULT_BAUDRATE, 0, 0x88, 0, 0, 0);
 	bconoutDUARTB(0, '*');
-
 #endif
     }
 #endif /* CONF_WITH_DUART */
@@ -1494,6 +1494,11 @@ void init_serport(void)
 
 #ifdef __mcoldfire__
     coldfire_rs232_enable_interrupt();
+#endif
+#ifdef CONF_WITH_DUART
+# ifdef CONF_SERIAL_CONSOLE
+    duart_rs232_enable_interrupt();
+# endif
 #endif
 }
 
