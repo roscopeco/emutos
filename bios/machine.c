@@ -208,7 +208,7 @@ int has_duart;
 static void detect_duart(void)
 {
     has_duart = 0;
-    if (check_read_byte(DUART_BASE))
+    if (check_read_byte(DUART_BASE+1))
         has_duart = 1;
 
     KDEBUG(("has_duart = %d\n", has_duart));
@@ -881,6 +881,8 @@ const char * machine_name(void)
     return m548x_machine_name();
 #elif defined(MACHINE_TINY68K)
     return "Tiny68K";
+#elif defined(MACHINE_ROSCO_V2)
+    return "ROSCO M68K Classic V2";
 #else
     return guess_machine_name();
 #endif

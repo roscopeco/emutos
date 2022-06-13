@@ -816,6 +816,10 @@ _duart_interrupt:
 
 // Call vector_5ms
 // As it will return with RTE, we must setup a proper stack frame
+        tst.w   _longframe
+        beq     _duart_short_frame
+        move.w  #0, -(sp)             // Format code for 68010 stack frame.
+_duart_short_frame:
         pea     duart_check_rx(pc)    // Return address
         move.w  sr, -(sp)             // Status Register
 
