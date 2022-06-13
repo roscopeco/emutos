@@ -1,21 +1,22 @@
-/* This is the config for Plasmo's Tiny68K SBC. */
+/* This is the config for the Rosco M68K Classic V2 board. */
 
 #define CONF_ATARI_HARDWARE 0
 
-#define MACHINE_TINY68K 1
+/* Use max ST RAM of 1 MB */
+#define CONF_STRAM_SIZE 1*1024*1024
 
-/* Use max ST RAM of 14 MB */
-#define CONF_STRAM_SIZE 14*1024*1024
+#define MACHINE_ROSCO_V2 1
 
-#define CONF_WITH_ADVANCED_CPU 0
+#define CONF_WITH_ADVANCED_CPU 1
 #define CONF_WITH_APOLLO_68080 0
 #define CONF_WITH_CACHE_CONTROL 0
 #define CONF_WITH_BUS_ERROR 1
 #define ALWAYS_SHOW_INITINFO 1
-/* #define CONF_WITH_MEMORY_TEST 1 */
+
+#define CONF_WITH_MFP 0
 
 #define CONF_WITH_DUART 1
-#define DUART_BASE 0xFFFFF000UL
+#define DUART_BASE 0xFFF00000UL
 #define CONF_WITH_DUART_CHANNEL_B 1
 #define CONF_DUART_TIMER_C 1
 #define DUART_DEBUG_PRINT 1
@@ -24,13 +25,12 @@
 #define CONF_SERIAL_CONSOLE_ANSI 1 
 #define CONF_SERIAL_CONSOLE_POLLING_MODE 1
 #define RS232_DEBUG_PRINT 0
-#define CONF_ATARI_IDE 1
-#define CONF_WITH_IDE 1
-
 
 #define USE_STOP_INSN_TO_FREE_HOST_CPU 0
 #define DETECT_NATIVE_FEATURES 0
 
 #define CONF_WITH_RESET 0 /* work around RESET/HALT bug on board */
+
+/* FIXME: For the DUART, this really selects 38400. */
 
 #define DEFAULT_BAUDRATE B19200

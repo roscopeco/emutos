@@ -1366,7 +1366,7 @@ static void init_bconmap(void)
         memcpy(&maptable[5],&maptable_duart_port_b,sizeof(MAPTAB));
         bconmap_root.maptabsize = 6;
 #endif
-        bconmap_root.mapped_device = 11;
+        bconmap_root.mapped_device = 10;
     }
 #endif
 

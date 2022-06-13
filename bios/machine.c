@@ -855,6 +855,8 @@ const char * machine_name(void)
     return m548x_machine_name();
 #elif defined(MACHINE_TINY68K)
     return "Tiny68K";
+#elif defined(MACHINE_ROSCO_V2)
+    return "ROSCO M68K Classic V2";
 #else
     return guess_machine_name();
 #endif
