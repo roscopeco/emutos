@@ -294,7 +294,7 @@ bios_src +=  memory.S processor.S vectors.S aciavecs.S bios.c xbios.c acsi.c \
              mfp.c midi.c mouse.c natfeat.S natfeats.c nvram.c panicasm.S \
              parport.c screen.c serport.c sound.c videl.c vt52.c xhdi.c \
              pmmu030.c 68040_pmmu.S \
-             amiga.c amiga2.S spi_vamp.c \
+             amiga.c amiga2.S spi_vamp.c spi_duart.S \
              lisa.c lisa2.S \
              delay.c delayasm.S sd.c memory2.c bootparams.c scsi.c nova.c \
              dsp.c dsp2.S
@@ -1234,7 +1234,7 @@ obj/header.h: tools/mkheader.awk obj/country version.mk
 TOCLEAN += obj/*.o
 
 CFILE_FLAGS = $(strip $(CFLAGS))
-SFILE_FLAGS = $(strip $(CFLAGS))
+SFILE_FLAGS = $(strip $(CFLAGS)) -Wa,--bitwise-or
 
 obj/%.o : %.tr.c
 	$(CC) $(CFILE_FLAGS) -c $< -o $@
