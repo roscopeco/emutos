@@ -204,7 +204,7 @@ int has_duart;
 static void detect_duart(void)
 {
     has_duart = 0;
-    if (check_read_byte(DUART_BASE))
+    if (check_read_byte(DUART_BASE+1))
         has_duart = 1;
 
     KDEBUG(("has_duart = %d\n", has_duart));
@@ -662,7 +662,7 @@ void machine_init(void)
  #endif
 
  #if CONF_WITH_DUART
-    if (has_duart)
+    if (has_duart & 0)
     {
         write_duart(DUART_CRA, DUART_CR_RESET_MR); /* Reset register index  register. */
         write_duart(DUART_CRA, DUART_CR_RESET_RX); /* Reset receiver. */
