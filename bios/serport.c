@@ -1227,7 +1227,7 @@ void duart_rs232_enable_interrupt(void)
 
 static void init_duart(void)
 {
-    /* nothing to do here */
+    write_duart(DUART_OPCR, 0);
 }
 
 /*
@@ -1440,7 +1440,7 @@ void init_serport(void)
     iorecDUARTB.out.buf = obufDUARTB;
 #endif /* CONF_WITH_DUART_CHANNEL_B */
     if (has_duart) {
-        rsconfDUARTA(DEFAULT_BAUDRATE, 0, 0x88, 0, 0, 0);
+        //rsconfDUARTA(DEFAULT_BAUDRATE, 0, 0x88, 0, 0, 0);
 #if CONF_WITH_DUART_CHANNEL_B
         rsconfDUARTB(DEFAULT_BAUDRATE, 0, 0x88, 0, 0, 0);
 	bconoutDUARTB(0, '*');
@@ -1463,7 +1463,7 @@ void init_serport(void)
 #endif
 
 #if !CONF_SERIAL_IKBD
-    (*rsconfptr)(DEFAULT_BAUDRATE, 0, 0x88, 1, 1, 0);
+    //(*rsconfptr)(DEFAULT_BAUDRATE, 0, 0x88, 1, 1, 0);
 #endif
 
 #if CONF_WITH_MFP_RS232
