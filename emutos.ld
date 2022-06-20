@@ -28,7 +28,7 @@ OUTPUT_FORMAT(binary)
 # define ROM_ORIGIN 0x00fc0000
 #else
 /*# define ROM_ORIGIN 0x00e00000 */
-# define ROM_ORIGIN 0xc0000
+# define ROM_ORIGIN 0xb0000
 #endif
 
 /* Always assume there is a lot of ROM space, so the link will always succeed.

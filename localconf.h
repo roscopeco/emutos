@@ -3,7 +3,7 @@
 #define CONF_ATARI_HARDWARE 0
 
 /* Use max ST RAM of 768 KB */
-#define CONF_STRAM_SIZE 768*1024
+#define CONF_STRAM_SIZE 11*64*1024
 
 #define MACHINE_ROSCO_V2 1
 
