@@ -72,7 +72,6 @@ _spi_clock_sd:
 _spi_clock_mmc:
 		rts
 
-// Output zero volts (active low) on SPI_CS
 _spi_cs_assert:
                move.l  #DUART_OUT_LO,a0
                move.b  #SPI_CS,(a0) 
@@ -88,7 +87,7 @@ _spi_cs_unassert:
 // send byte to SPI via DUART GPIO
 // void spi_send_byte(int byte) - C callable
 _spi_send_byte:
-                move.b  4+3(sp),d0              //   12  d0 = send byte
+                move.b  5(sp),d0                //   12  d0 = send byte
                 movem.l d2-d5,-(a7)             //12+32  save regs
                 move.l  #DUART_OUT_LO,a0        //   12  a0 = output LO
                 lea.l   OUT_HI_OFFSET(a0),a1    //    8  a1 = output HI
