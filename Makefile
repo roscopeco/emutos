@@ -764,6 +764,8 @@ m548x-bas:
 	$(MAKE) COLDFIRE=1 CPUFLAGS='$(CPUFLAGS)' DEF='$(DEF)' UNIQUE=$(UNIQUE) LMA=0xe0100000 SRECFILE=$(SREC_M548X_BAS) $(SREC_M548X_BAS) REF_OS=TOS404
 	@printf "$(LOCALCONFINFO)"
 
+include Makefile_sbc.mk
+
 #
 # Special variants of EmuTOS running in RAM instead of ROM.
 # In this case, emutos.img needs to be loaded into RAM by some loader.

@@ -644,6 +644,8 @@
 # endif
 #endif
 
+#include "config_tiny68k.h"
+
 /*
  * By default, EmuTOS is built for Atari ST/TT/Falcon compatible hardware
  */

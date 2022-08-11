@@ -324,11 +324,13 @@ endfunction()
 add_executable(etos256us.img ${source_files})
 add_executable(etos512us.img ${source_files})
 add_executable(etos1024k.img ${source_files})
+add_executable(tiny68k.img   ${source_files})
 
 #configure_target(etos192us TARGET_192 192)
-configure_target(etos256us TARGET_256   256 "-Os" ${UNIQUE})
-configure_target(etos512us TARGET_512   512 "-O2" ${UNIQUE})
-configure_target(etos1024k TARGET_1024 1024 "-O2" "")
+configure_target(etos256us TARGET_256      256 "-Os" ${UNIQUE})
+configure_target(etos512us TARGET_512      512 "-O2" ${UNIQUE})
+configure_target(etos1024k TARGET_1024    1024 "-O2" "")
+configure_target(tiny68k   MACHINE_TINY68K 256 "-O2" ${UNIQUE})
 
 
 
