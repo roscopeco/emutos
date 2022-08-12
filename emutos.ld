@@ -34,6 +34,8 @@ OUTPUT_FORMAT(binary)
 # define ROM_ORIGIN 0x00fa0000
 #elif defined(TARGET_192)
 # define ROM_ORIGIN 0x00fc0000
+#elif defined(MACHINE_ROSCO_V2)
+# define ROM_ORIGIN 0xb0000 
 #else
 # define ROM_ORIGIN 0x00e00000
 #endif
