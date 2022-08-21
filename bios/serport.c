@@ -1118,11 +1118,26 @@ static ULONG rsconf_duart(UBYTE port, EXT_IOREC *iorec, WORD baud, WORD ctrl, WO
      * set baudrate from lookup table
      */
     if ((baud >= MIN_BAUDRATE_CODE ) && (baud <= MAX_BAUDRATE_CODE)) {
-        /* Baud rates not supported by DUART are adjusted to nearby ones that are supported. */
-        if (baud == B3600) baud = B2400;
-        else if (baud == B2000 || baud == B1800) baud = B1200;
-        else if (baud == B50) baud = B75;
-        write_duart(clock_sel_reg_num, baudset[baud]);
+        UBYTE baud_rate_value = 0;
+#ifdef CONF_WITH_DUART_EXTENDED_BAUD_RATES
+        // Special handling for 115200.
+        if (baud == B115200) {
+            write_duart(command_reg_num, 0xA0); // Enable extended TX rates
+            write_duart(command_reg_num, 0x80); // Enable extended RX rates
+            baud_rate_value = 0x88;
+        } else {
+            write_duart(command_reg_num, 0xB0); // Disable extended TX rates
+            write_duart(command_reg_num, 0x90); // Disable extended RX rates
+#endif
+            /* Baud rates not supported by DUART are adjusted to nearby ones that are supported. */
+            if (baud == B3600) baud = B2400;
+            else if (baud == B2000 || baud == B1800) baud = B1200;
+            else if (baud == B50) baud = B75;
+            baud_rate_value = baudset[baud];
+#ifdef CONF_WITH_DUART_EXTENDED_BAUD_RATES
+        }
+#endif
+        write_duart(clock_sel_reg_num, baud_rate_value);
     }
     update_iorec(iorec, baud, ctrl, ucr);
 
@@ -1209,6 +1224,9 @@ static void duart_init_interrupts_common(void)
 
 #if CONF_DUART_TIMER_C
     IMR_value |= DUART_IMR_COUNTER_READY;
+#endif
+#if CONF_WITH_DUART_CHANNEL_B
+    IMR_value |= DUART_IMR_RXRDY_B;
 #endif
     /* Enable the interrupt(s). */
     write_duart(DUART_IMR, IMR_value);

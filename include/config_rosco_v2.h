@@ -77,10 +77,6 @@
 #  define DETECT_NATIVE_FEATURES 0
 # endif
 
-/* FIXME: For the DUART, this really selects 38400. */
-
-# ifndef DEFAULT_BAUDRATE
-#  define DEFAULT_BAUDRATE B19200
-# endif
+#define DEFAULT_BAUDRATE B115200
 
 #endif
