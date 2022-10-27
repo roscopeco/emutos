@@ -98,9 +98,8 @@ set(util_src util/cookie.c util/doprintf.c util/intmath.c util/memmove.S util/me
 )
 
 # The functions in the following modules are used by the AES and EmuDesk
-if (WITH_AES)
-    set(util_src ${util_src} util/gemdos.c util/optimize.c util/optimopt.S util/rectfunc.c util/stringasm.S)
-endif()
+
+set(aes_util_src ${util_src} util/gemdos.c util/optimize.c util/optimopt.S util/rectfunc.c util/stringasm.S)
 
 #
 # font code not in the font lib
@@ -152,22 +151,6 @@ set(desk_src desk/deskstart.S desk/deskmain.c desk/gembind.c desk/deskact.c desk
 
 set(cli_src cli/cmdasm.S cli/cmdmain.c cli/cmdedit.c cli/cmdexec.c cli/cmdint.c cli/cmdparse.c cli/cmdutil.c)
 
-set(source_files ${bios_src} ${bdos_src} ${util_src} ${font_src} ${vdi_src} ${CMAKE_CURRENT_BINARY_DIR}/version.c)
-set(option_definitions "-DWITH_CMAKE")
-
-if (WITH_AES)
-    set(source_files ${source_files} ${aes_src} ${desk_src})
-    set(option_definitions ${option_definitions} "-DWITH_AES=1")
-else()
-    set(option_definitions ${option_definitions} "-DWITH_AES=0")
-endif()
-
-if (WITH_CLI)
-    set(source_files ${source_files} ${cli_src})
-    set(option_definitions ${option_definitions} "-DWITH_CLI=1")
-else()
-    set(option_definitions ${option_definitions} "-DWITH_CLI=0")
-endif()
 
 # Create the font library.
 
@@ -184,9 +167,9 @@ target_include_directories(font SYSTEM PUBLIC ${CMAKE_SOURCE_DIR}/include)
 # Due to CMake limitations, to place endrom.c at the end of the link we need to artificially put in a library.
 #--------
 
-add_library(endrom bios/endrom.c)
-target_include_directories(endrom SYSTEM PUBLIC ${CMAKE_SOURCE_DIR}/include)
-target_compile_definitions(endrom PUBLIC ${compile_definitions} ${option_definitions})
+# add_library(endrom bios/endrom.c)
+# target_include_directories(endrom SYSTEM PUBLIC ${CMAKE_SOURCE_DIR}/include)
+# target_compile_definitions(endrom PUBLIC ${compile_definitions} ${option_definitions})
 
 # Build the various native tools we need.
 
@@ -205,10 +188,11 @@ add_custom_target(bug
         DEPENDS ${CMAKE_SOURCE_DIR}/tools/bug.c
 )
 
-add_custom_target(draft
-        COMMAND ${NATIVECC} ${option_definitions} -DTARGET_256 ${CMAKE_SOURCE_DIR}/tools/draft.c ${CMAKE_SOURCE_DIR}/tools/draftexc.c -o draft
-        DEPENDS ${CMAKE_SOURCE_DIR}/tools/draft.c ${CMAKE_SOURCE_DIR}/tools/draftexc.c
-        )
+# add_custom_target(draft
+#         # FIXME: This needs to built per target
+#         COMMAND ${NATIVECC} ${option_definitions} -DTARGET_256 ${CMAKE_SOURCE_DIR}/tools/draft.c ${CMAKE_SOURCE_DIR}/tools/draftexc.c -o draft
+#         DEPENDS ${CMAKE_SOURCE_DIR}/tools/draft.c ${CMAKE_SOURCE_DIR}/tools/draftexc.c
+#         )
 
 add_custom_target(erd
         COMMAND ${NATIVECC} ${CMAKE_SOURCE_DIR}/tools/erd.c -o erd
@@ -234,25 +218,59 @@ add_custom_target(mrd
 set(POFILES po/cs.po po/de.po po/es.po po/fi.po po/fr.po po/gr.po po/hu.po po/it.po po/nl.po po/pl.po po/ru.po po/tr.po)
 
 function(configure_target target_name target_define rom_size optflags unique)
+    cmake_parse_arguments(CONFIG "" "WITH_AES;WITH_CLI" "" ${ARGN})
+    message("CONFIG_WITH_AES = ${CONFIG_WITH_AES}")
+    message("CONFIG_WITH_CLI = ${CONFIG_WITH_CLI}")
     set(target ${target_name}.img)
+
+    set(source_files ${bios_src} ${bdos_src} ${util_src} ${font_src} ${vdi_src} ${CMAKE_CURRENT_BINARY_DIR}/version.c)
+    set(option_definitions "-DWITH_CMAKE")
+
+    if (CONFIG_WITH_AES)
+        set(source_files ${source_files} ${aes_util_src} ${aes_src} ${desk_src})
+        set(option_definitions ${option_definitions} "-DWITH_AES=1")
+    else()
+        set(option_definitions ${option_definitions} "-DWITH_AES=0")
+    endif()
+
+    if (CONFIG_WITH_CLI)
+        set(source_files ${source_files} ${cli_src})
+        set(option_definitions ${option_definitions} "-DWITH_CLI=1")
+    else()
+        set(option_definitions ${option_definitions} "-DWITH_CLI=0")
+    endif()
+
+    add_executable(${target} ${source_files} bios/spi_duart.S)
+
+    add_library(${target_name}_endrom bios/endrom.c)
+    target_include_directories(${target_name}_endrom SYSTEM PUBLIC ${CMAKE_SOURCE_DIR}/include)
+    target_compile_definitions(${target_name}_endrom PUBLIC ${compile_definitions} ${option_definitions})
+
     set(target_build_dir ${CMAKE_CURRENT_BINARY_DIR}/${target_name})
-    file(MAKE_DIRECTORY ${target_build_dir}/util  ${target_build_dir}/po ${target_build_dir}/aes ${target_build_dir}/desk)
+    file(MAKE_DIRECTORY ${target_build_dir}/util  ${target_build_dir}/po)
+    #if (CONFIG_WITH_AES)
+    #endif()
+
     file(COPY ${POFILES} po/LINGUAS DESTINATION ${target_build_dir}/po)
     set(linker_file ${target_build_dir}/${target_name}pp.ld)
-    target_sources(${target} PUBLIC ${target_build_dir}/util/langs.c ${target_build_dir}/aes/gem_rsc.c
+    target_sources(${target} PUBLIC ${target_build_dir}/util/langs.c)
+
+    if (CONFIG_WITH_AES)
+        file(MAKE_DIRECTORY ${target_build_dir}/aes ${target_build_dir}/desk)
+        target_sources(${target} PUBLIC ${target_build_dir}/aes/gem_rsc.c
             ${target_build_dir}/desk/desk_rsc.c ${target_build_dir}/desk/icons.c ${target_build_dir}/aes/mforms.c)
+    endif()
     target_compile_options(${target} PUBLIC ${CPUFLAGS} -mshort ${optflags} ${OTHERFLAGS} ${WARNFLAGS})
     target_compile_definitions(${target} PUBLIC ${compile_definitions} ${option_definitions} ${target_define})
     target_include_directories(${target} SYSTEM PUBLIC ${target_build_dir}/aes ${target_build_dir}/desk ${target_build_dir}
             ${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/aes ${CMAKE_SOURCE_DIR}/bios
             ${CMAKE_SOURCE_DIR}/util )
-    target_link_libraries(${target} PUBLIC font gcc endrom)
+    target_link_libraries(${target} PUBLIC font gcc ${target_name}_endrom)
     target_link_options(${target} BEFORE PUBLIC ${CPUFLAGS} -mshort -nostartfiles -nostdlib)
     target_link_options(${target} PUBLIC LINKER:-T,${linker_file} LINKER:-Map=${target_build_dir}/${target_name}.map)
-    add_dependencies(${target} bug draft erd grd ird mrd ${target_name}_header ${target_name}_i18nconf ${target_name}pp.ld)
+    add_dependencies(${target} bug draft_${target_name} erd grd ird mrd ${target_name}_header ${target_name}_i18nconf ${target_name}pp.ld)
     set_target_properties(${target} PROPERTIES LINK_DEPENDS ${linker_file})
 
-    message("Incoming UNIQUE is '${unique}'")
     set(localise_unique "")
     if (unique)
         set(localise_unique "-u${unique}")
@@ -297,15 +315,23 @@ function(configure_target target_name target_define rom_size optflags unique)
             WORKING_DIRECTORY ${target_build_dir}
             )
 
+    add_custom_command(OUTPUT ${target_build_dir}/draft
+            COMMAND ${NATIVECC} ${option_definitions} -D${target_define} ${CMAKE_SOURCE_DIR}/tools/draft.c ${CMAKE_SOURCE_DIR}/tools/draftexc.c -o ${target_build_dir}/draft
+            DEPENDS ${CMAKE_SOURCE_DIR}/tools/draft.c ${CMAKE_SOURCE_DIR}/tools/draftexc.c
+            )
+
+
+    add_custom_target(draft_${target_name} DEPENDS ${target_build_dir}/draft)
+
     add_custom_command(OUTPUT ${target_build_dir}/aes/gem_rsc.c ${target_build_dir}/aes/gem_rsc.h
             COMMAND ${CMAKE_BINARY_DIR}/grd ${CMAKE_SOURCE_DIR}/aes/gem ${target_build_dir}/aes/gem_rsc
             DEPENDS grd ${CMAKE_SOURCE_DIR}/aes/gem.rsc
     )
 
     add_custom_command(OUTPUT ${target_build_dir}/desk/desk_rsc.c ${target_build_dir}/desk/desk_rsc.h
-            COMMAND ${CMAKE_BINARY_DIR}/draft ${CMAKE_SOURCE_DIR}/desk/desktop ${target_build_dir}/draft.tmp
+            COMMAND ${target_build_dir}/draft ${CMAKE_SOURCE_DIR}/desk/desktop ${target_build_dir}/draft.tmp
             COMMAND ${CMAKE_BINARY_DIR}/erd -pdesk ${target_build_dir}/draft.tmp ${target_build_dir}/desk/desk_rsc
-            DEPENDS draft erd ${CMAKE_SOURCE_DIR}/desk/desktop.rsc
+            DEPENDS draft_${target_name} erd ${CMAKE_SOURCE_DIR}/desk/desktop.rsc
     )
 
     add_custom_command(OUTPUT ${target_build_dir}/aes/mforms.c ${target_build_dir}/aes/mforms.h
@@ -320,19 +346,12 @@ function(configure_target target_name target_define rom_size optflags unique)
 
 endfunction()
 
-#add_executable(etos192us.img ${source_files})
-add_executable(etos256us.img ${source_files})
-add_executable(etos512us.img ${source_files})
-add_executable(etos1024k.img ${source_files})
-add_executable(tiny68k.img   ${source_files})
-add_executable(rosco_v2.img  ${source_files} bios/spi_duart.S)
-
-#configure_target(etos192us TARGET_192 192)
-configure_target(etos256us TARGET_256       256 "-Os" ${UNIQUE})
-configure_target(etos512us TARGET_512       512 "-O2" ${UNIQUE})
-configure_target(etos1024k TARGET_1024     1024 "-O2" "")
-configure_target(tiny68k   MACHINE_TINY68K  256 "-O2" ${UNIQUE})
-configure_target(rosco_v2  MACHINE_ROSCO_V2 256 "-O2" ${UNIQUE})
+configure_target(etos192us TARGET_192        192 "-Os" US WITH_AES ON  WITH_CLI OFF)
+configure_target(etos256us TARGET_256        256 "-Os" US WITH_AES ON  WITH_CLI ON)
+configure_target(etos512us TARGET_512        512 "-O2" US WITH_AES ON  WITH_CLI ON)
+configure_target(etos1024k TARGET_1024      1024 "-O2" "" WITH_AES ON  WITH_CLI ON)
+configure_target(tiny68k   MACHINE_TINY68K   256 "-O2" US WITH_AES OFF WITH_CLI ON)
+configure_target(rosco_v2  MACHINE_ROSCO_V2  256 "-O2" US WITH_AES OFF WITH_CLI ON)
 
 
 
