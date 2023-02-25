@@ -2631,7 +2631,7 @@ int n;
             exit(0);
             break;
         case 'm':
-            message_file = strdup(optarg);
+            message_file = xstrdup(optarg);
             break;
         default:
             usage();
