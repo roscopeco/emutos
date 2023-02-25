@@ -1,5 +1,5 @@
 # Not defined: CMAKE_ASM_COMPILER CMAKE_CXX_COMPILER
-set(CMAKE_AR           m68k-atari-mint-gcc-ar)
+set(CMAKE_AR           m68k-atari-mint-ar)
 set(CMAKE_C_COMPILER   m68k-atari-mint-gcc-4.6.4)
 set(CMAKE_C_LINKER     m68k-atari-mint-ld)
 set(CMAKE_C_OBJCOPY    m68k-atari-mint-objcopy)
