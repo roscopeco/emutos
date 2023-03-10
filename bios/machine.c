@@ -416,6 +416,8 @@ static void setvalue_mch(void)
     }
     else
         cookie_mch = MCH_ST;
+#elif defined(MACHINE_TINY68K)
+    cookie_mch = MCH_TINY68K;
 #else
     cookie_mch = MCH_NOHARD;
 #endif /* CONF_ATARI_HARDWARE */
@@ -847,6 +849,8 @@ static const char * guess_machine_name(void)
         return "Atari TT";
     case MCH_FALCON:
         return "Atari Falcon";
+    case MCH_TINY68K:
+        return "Tiny68K Rev 2";
     default:
         return "unknown";
     }
@@ -863,8 +867,6 @@ const char * machine_name(void)
     return "Apple Lisa";
 #elif defined(MACHINE_M548X)
     return m548x_machine_name();
-#elif defined(MACHINE_TINY68K)
-    return "Tiny68K";
 #elif defined(MACHINE_ROSCO_V2)
     return "ROSCO M68K Classic V2";
 #else
