@@ -917,6 +917,13 @@
 #endif
 
 /*
+ * Set CONF_WITH_MFP_3X_CLOCK if the MFP is using a 7.378 MHz serial clock.
+ */
+#ifndef CONF_WITH_MFP_3X_CLOCK
+# define CONF_WITH_MFP_3X_CLOCK 0
+#endif
+
+/*
  * Set CONF_WITH_MFP_RS232 to 1 to enable MFP RS-232 support
  */
 #ifndef CONF_WITH_MFP_RS232

@@ -207,8 +207,15 @@ void init_system_timer(void)
 #elif CONF_DUART_TIMER_C
     duart_init_system_timer();
 #elif CONF_WITH_MFP
+#if CONF_WITH_MFP_3X_CLOCK
+    /* Timer C for 7.378 Mhz clock (3X standard clock): 
+     * ctrl = divide 200, data = 184; yields 200.35
+     */
+    xbtimer(2, 0x70, 184, (LONG)int_timerc);
+#else
     /* Timer C: ctrl = divide 64, data = 192 */
     xbtimer(2, 0x50, 192, (LONG)int_timerc);
+#endif
 #endif
 
     /* The timer will really be enabled when sr is set to 0x2500 or lower. */
