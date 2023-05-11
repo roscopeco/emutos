@@ -646,6 +646,7 @@
 
 #include "config_tiny68k.h"
 #include "config_rosco_v2.h"
+#include "config_bitsy_v1.h"
 
 /*
  * By default, EmuTOS is built for Atari ST/TT/Falcon compatible hardware

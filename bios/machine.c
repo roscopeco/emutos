@@ -418,6 +418,8 @@ static void setvalue_mch(void)
         cookie_mch = MCH_ST;
 #elif defined(MACHINE_TINY68K)
     cookie_mch = MCH_TINY68K;
+#elif defined(MACHINE_BITSY_V1)
+    cookie_mch = MCH_BITSY_V1;
 #else
     cookie_mch = MCH_NOHARD;
 #endif /* CONF_ATARI_HARDWARE */
@@ -851,6 +853,8 @@ static const char * guess_machine_name(void)
         return "Atari Falcon";
     case MCH_TINY68K:
         return "Tiny68K Rev 2";
+    case MCH_BITSY_V1:
+        return "BITSY V1";
     default:
         return "unknown";
     }
