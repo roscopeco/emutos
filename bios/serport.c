@@ -167,7 +167,12 @@ static const struct mfp_rs232_table mfp_rs232_init[] = {
     { /*  2000 */  1, 10 },
     { /*  1800 */  1, 11 },
     { /*  1200 */  1, 16 },
+#ifdef MACHINE_BITSY_V1
+    { /*   600 */  1, 24 }, /* Yields 800*3=2400 baud on BITSY. */
+#else
     { /*   600 */  1, 32 },
+#endif
+
     { /*   300 */  1, 64 },
     { /*   200 */  1, 96 },
     { /*   150 */  1, 128 },
