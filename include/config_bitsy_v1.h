@@ -37,6 +37,10 @@
 # ifndef CONF_WITH_MFP_RS232
 #  define CONF_WITH_MFP_RS232 1
 # endif
+/* BITSY V1 clocks the MFP at 7.387 Mhz instead of the standard 2.4576 MHz. */
+# ifndef CONF_WITH_MFP_3X_CLOCK
+#  define CONF_WITH_MFP_3X_CLOCK 1
+# endif
 
 # ifndef CONF_WITH_NVRAM
 #  define CONF_WITH_NVRAM 1
