@@ -1438,7 +1438,7 @@ static void init_bconmap(void)
          * port A for file transfers since flow control pins are available on the
          * port A header but not the port B header.
          */
-        bconmap_root.mapped_device = 11;
+        bconmap_root.mapped_device = 10;
 #else
         bconmap_root.mapped_device = 10;
 #endif
