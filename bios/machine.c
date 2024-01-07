@@ -420,6 +420,8 @@ static void setvalue_mch(void)
     cookie_mch = MCH_TINY68K;
 #elif defined(MACHINE_BITSY_V1)
     cookie_mch = MCH_BITSY_V1;
+#elif defined(MACHINE_ROBERTS7531)
+    cookie_mch = MCH_ROBERTS7531;
 #else
     cookie_mch = MCH_NOHARD;
 #endif /* CONF_ATARI_HARDWARE */
@@ -855,6 +857,8 @@ static const char * guess_machine_name(void)
         return "Tiny68K Rev 2";
     case MCH_BITSY_V1:
         return "BITSY V1";
+    case MCH_ROBERTS7531:
+        return "@ROBERTS7531";
     default:
         return "unknown";
     }
@@ -873,6 +877,8 @@ const char * machine_name(void)
     return m548x_machine_name();
 #elif defined(MACHINE_ROSCO_V2)
     return "ROSCO M68K Classic V2";
+#elif defined(MACHINE_ROBERTS_7531)
+    return "@ROBERTS7531 V1";
 #else
     return guess_machine_name();
 #endif

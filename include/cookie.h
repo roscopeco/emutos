@@ -57,6 +57,8 @@ struct cookie {
 #define MCH_ARANYM  0x00050000L
 #define MCH_TINY68K 0x80000000L
 #define MCH_BITSY_V1 0x80000100L
+#define MCH_ROSCO_V2 0x80000200L
+#define MCH_ROBERTS7531 0x80000300L
 
 /*
  * values of _VDO cookie

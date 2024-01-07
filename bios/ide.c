@@ -118,7 +118,7 @@ struct IDE
 #define IDE_WRITE_COMMAND_HEAD(i,a,b) \
     { i->head = b; i->command = a; }
 
-#ifdef MACHINE_TINY68K
+#if defined(MACHINE_TINY68K) || defined(MACHINE_ROBERTS7531)
 # define IDE_WRITE_CONTROL(i,a)
 # define IDE_READ_ALT_STATUS(i)    i->command
 #else
@@ -183,7 +183,7 @@ struct IDE
 #define NUM_IDE_INTERFACES  1   /* (e.g. stacked ST Doubler) */
 #endif
 
-#ifdef MACHINE_TINY68K
+#if defined(MACHINE_TINY68K) || defined(MACHINE_ROBERTS7531)
 
 struct IDE
 {
@@ -212,7 +212,11 @@ struct IDE
      */
 };
 
-#define ide_interface           ((volatile struct IDE *)0x00ffe000)
+#ifdef MACHINE_TINY68K
+  #define ide_interface           ((volatile struct IDE *)0x00ffe000)
+#else
+  #define ide_interface           ((volatile struct IDE *)0x00a00000)
+#endif
 
 #else
 
