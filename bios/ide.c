@@ -127,6 +127,7 @@ struct IDE
 #endif
 
 #define IDE_WRITE_HEAD(i,a)       i->head = a
+#define IDE_WRITE_FEATURES(i,a)   i->features = a
 
 #define IDE_READ_STATUS(i)        i->command
 #define IDE_READ_ERROR(i)         i->features
@@ -151,7 +152,18 @@ struct IDE
 #define IDE_32BIT_XFER FALSE
 #endif
 
-#if IDE_32BIT_XFER
+#ifdef MACHINE_ROBERTS7531
+#define IDE_8BIT_XFER TRUE
+#else
+#define IDE_8BIT_XFER FALSE
+#endif
+
+#if IDE_8BIT_XFER
+  #define XFERWIDTH   UBYTE
+  #define xferswap(a)
+  #define ide_get_and_incr(src, dst) asm volatile("move.b (%1), (%0)+" : "=a"(dst): "a"(src), "0"(dst));
+  #define ide_put_and_incr(src, dst) asm volatile("move.b (%0)+, (%1)" : "=a"(src): "a"(dst), "0"(src));
+#elif IDE_32BIT_XFER
 #define XFERWIDTH   ULONG
 #define xferswap(a) swpw2(a)
 #define ide_get_and_incr(src,dst) asm volatile("move.l (%1),(%0)+" : "=a"(dst): "a"(src), "0"(dst));
@@ -176,6 +188,9 @@ struct IDE
 struct IDE
 {
     XFERWIDTH data;
+#if IDE_8BIT_XFER
+    UBYTE filler01;
+#endif
     UBYTE filler02;
     UBYTE features; /* Read: error */
     UBYTE filler04;
@@ -246,6 +261,7 @@ struct IDE
 #define IDE_CMD_READ_MULTIPLE       0xc4
 #define IDE_CMD_WRITE_MULTIPLE      0xc5
 #define IDE_CMD_SET_MULTIPLE_MODE   0xc6
+#define IDE_CMD_SET_FEATURES        0xef
 
 #define IDE_CMD_ATAPI_PACKET    0xa0    /* ATAPI-only commands */
 #define IDE_CMD_ATAPI_IDENTIFY  0xa1
@@ -390,6 +406,8 @@ static void set_multiple_mode(WORD dev,UWORD multi_io);
 static UWORD get_start_count(volatile struct IDE *interface);
 static void set_start_count(volatile struct IDE *interface,UBYTE sector,UBYTE count);
 static int wait_for_not_BSY(volatile struct IDE *interface,LONG timeout);
+static LONG ide_nodata(UBYTE cmd,UWORD ifnum,UWORD dev,ULONG sector,UWORD count);
+
 
 #if CONF_WITH_SCSI_DRIVER
 static LONG ata_request_sense(WORD dev,WORD buflen,UBYTE *buffer);
@@ -602,6 +620,24 @@ BOOL detect_ide(void)
     return has_ide ? TRUE : FALSE;
 }
 
+#if IDE_8BIT_XFER
+static void ide_set_8bit_mode(UWORD ifnum)
+{
+    /* must be called after ide_detect_devices */
+    volatile struct IDE *interface = ifinfo[ifnum].base_address;
+    struct IFINFO *info = ifinfo + ifnum;
+    int i;
+    for (i = 0; i < 2; i++) {
+        IDE_WRITE_HEAD(interface, IDE_DEVICE(i));
+        if (info->dev[i].type == DEVTYPE_ATA || info->dev[i].type == DEVTYPE_ATAPI) {
+            IDE_WRITE_FEATURES(interface, 0x01);
+            ide_nodata(IDE_CMD_SET_FEATURES, ifnum, i, 0, 0);
+        }
+    }
+}
+#endif
+
+
 /*
  * perform any one-time initialisation required
  *
@@ -638,8 +674,12 @@ void ide_init(void)
 
     /* detect devices */
     for (i = 0, bitmask = 1; i < NUM_IDE_INTERFACES; i++, bitmask <<= 1)
-        if (has_ide&bitmask)
+        if (has_ide&bitmask) {
             ide_detect_devices(i);
+#if IDE_8BIT_XFER
+            ide_set_8bit_mode(i);
+#endif
+        }
 
     /* set multiple mode for all devices that we have info for */
     for (i = 0; i < DEVICES_PER_BUS; i++)
@@ -965,10 +1005,10 @@ static void ide_get_data(volatile struct IDE *interface,UBYTE *buffer,ULONG buff
 {
     XFERWIDTH *p = (XFERWIDTH *)buffer;
     XFERWIDTH *end;
-    UWORD *p2;
-    UWORD *end2 = (UWORD *)(buffer + bufferlen);
+    XFERWIDTH *p2;
+    XFERWIDTH *end2 = (XFERWIDTH *)(buffer + bufferlen);
 
-    KDEBUG(("ide_get_data(%p, %p, %lu, %d)\n", interface, buffer, bufferlen, need_byteswap));
+    KDEBUG(("ide_get_data(intf=%p, buf=%p, len=%lu, need_byteswap=%d)\n", interface, buffer, bufferlen, need_byteswap));
 
 #if CONF_WITH_APOLLO_68080
     if (is_apollo_68080)
@@ -1002,9 +1042,9 @@ static void ide_get_data(volatile struct IDE *interface,UBYTE *buffer,ULONG buff
         }
 
         /* transfer remainder 2 bytes at a time */
-        p2 = (UWORD *)p;
+        p2 = (XFERWIDTH *)p;
         while (p2 < end2) {
-            UWORD temp;
+            XFERWIDTH temp;
 
             temp = *(UWORD_ALIAS *)&interface->data;
             swpw(temp);
@@ -1012,7 +1052,11 @@ static void ide_get_data(volatile struct IDE *interface,UBYTE *buffer,ULONG buff
         }
     } else {
         end = (XFERWIDTH *)(buffer + (bufferlen & ~(64-1)));    /* mask must match unrolled loop */
+#if IDE_8BIT_XFER
+        XFERWIDTH *q = p;
+#endif
         while (p < end) {
+
             /* Unroll the loop 16 times, transferring 32/64 bytes in a row.
              * Note that the pointer p gets incremented implicitly.
              */
@@ -1036,11 +1080,24 @@ static void ide_get_data(volatile struct IDE *interface,UBYTE *buffer,ULONG buff
             ide_get_and_incr(&(interface->data), p);
             ide_get_and_incr(&(interface->data), p);
         }
+#if IDE_8BIT_XFER
+        /* transfer remainder 1 byte at a time. */
+        p2 = (XFERWIDTH *) p;
+        while (p2 < end2) {
+            *p2++ = *(UBYTE_ALIAS *)&interface->data;
+        }
+#else
         /* transfer remainder 2 bytes at a time */
         p2 = (UWORD *)p;
         while (p2 < end2) {
             *p2++ = *(UWORD_ALIAS *)&interface->data;
         }
+#endif
+#if IDE_8BIT_XFER
+        KDEBUG(("Before byteswap, bytes are 0x%02x, 0x%02x\n", buffer[510], buffer[511]));
+        byteswap(q, 512);
+        KDEBUG(("After byteswap, bytes are 0x%02x, 0x%02x\n", buffer[510], buffer[511]));
+#endif
     }
 }
 
@@ -1135,8 +1192,8 @@ static void ide_put_data(volatile struct IDE *interface,UBYTE *buffer,ULONG buff
 {
     XFERWIDTH *p = (XFERWIDTH *)buffer;
     XFERWIDTH *end;
-    UWORD *p2;
-    UWORD *end2 = (UWORD *)(buffer + bufferlen);
+    XFERWIDTH *p2;
+    XFERWIDTH *end2 = (XFERWIDTH *)(buffer + bufferlen);
 
     if (need_byteswap) {
         end = (XFERWIDTH *)(buffer + (bufferlen & ~(16-1)));    /* mask must match unrolled loop */
@@ -1162,9 +1219,9 @@ static void ide_put_data(volatile struct IDE *interface,UBYTE *buffer,ULONG buff
         }
 
         /* transfer remainder 2 bytes at a time */
-        p2 = (UWORD *)p;
+        p2 = (XFERWIDTH *)p;
         while (p2 < end2) {
-            UWORD temp;
+            XFERWIDTH temp;
 
             temp = *p2++;
             swpw(temp);
@@ -1172,6 +1229,9 @@ static void ide_put_data(volatile struct IDE *interface,UBYTE *buffer,ULONG buff
         }
     } else {
         end = (XFERWIDTH *)(buffer + (bufferlen & ~(64-1)));    /* mask must match unrolled loop */
+#if IDE_8BIT_XFER
+        byteswap(p, 16);
+#endif
         while (p < end) {
             /* Unroll the loop 16 times, transferring 32/64 bytes in a row.
              * Note that the pointer p gets incremented implicitly.
@@ -1196,11 +1256,19 @@ static void ide_put_data(volatile struct IDE *interface,UBYTE *buffer,ULONG buff
             ide_put_and_incr(p, &(interface->data));
             ide_put_and_incr(p, &(interface->data));
         }
+#if IDE_8BIT_XFER
+        /* transfer remainder 1 byte at a time */
+        p2 = (UBYTE *)p;
+        while (p2 < end2) {
+            *(UBYTE_ALIAS *)&interface->data = *p2++;
+        }
+#else
         /* transfer remainder 2 bytes at a time */
-        p2 = (UWORD *)p;
+        p2 = (XFERWIDTH *)p;
         while (p2 < end2) {
             *(UWORD_ALIAS *)&interface->data = *p2++;
         }
+#endif
     }
 }
 
