@@ -187,10 +187,10 @@ struct IDE
 
 struct IDE
 {
-    XFERWIDTH data;
 #if IDE_8BIT_XFER
     UBYTE filler01;
 #endif
+    XFERWIDTH data;
     UBYTE filler02;
     UBYTE features; /* Read: error */
     UBYTE filler04;
