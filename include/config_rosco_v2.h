@@ -19,12 +19,13 @@
 # endif
 
 # ifndef CONF_STRAM_SIZE
-/*#  define CONF_STRAM_SIZE 11*64*1024*/
-/*#  define CONF_STRAM_SIZE 1*1024*1024 */
-#  define CONF_STRAM_SIZE 0x3d0000 
+#  define CONF_STRAM_SIZE 11*64*1024
 # endif
 # ifndef CONF_WITH_ALT_RAM
 #  define CONF_WITH_ALT_RAM 0
+# endif
+# ifndef CONF_WITH_MFP
+#  define CONF_WITH_MFP 0
 # endif
 # ifndef CONF_WITH_DUART
 #  define CONF_WITH_DUART 1

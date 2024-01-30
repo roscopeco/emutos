@@ -10,7 +10,7 @@
  * option any later version.  See doc/license.txt for details.
  */
 
-#define ENABLE_KDEBUG 
+/* #define ENABLE_KDEBUG */
 
 #include "emutos.h"
 #include "cookie.h"
@@ -879,6 +879,8 @@ const char * machine_name(void)
     return "ROSCO M68K Classic V2";
 #elif defined(MACHINE_ROBERTS_7531)
     return "@ROBERTS7531 V1";
+#elif defined(MACHINE_TINY68K)
+    return "Tiny68K";
 #else
     return guess_machine_name();
 #endif

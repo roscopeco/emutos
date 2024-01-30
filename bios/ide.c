@@ -813,8 +813,8 @@ static void ide_detect_devices(UWORD ifnum)
 
 #ifdef CONF_IDE_NO_RESET
     /* Some IDE interfaces do not provide access to the IDE device control register,
-     * so we can't use the logic below that does a software reset. 
-     * As a hack, we just force the dev type for all detected interfaces. 
+     * so we can't use the logic below that does a software reset.
+     * As a hack, we just force the dev type for all detected interfaces.
      */
     for (i = 0; i < 2; i++) {
         if (info->dev[i].type == DEVTYPE_UNKNOWN) { // device was detected

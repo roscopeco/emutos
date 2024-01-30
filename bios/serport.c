@@ -1103,7 +1103,7 @@ static ULONG rsconf_duart(UBYTE port, EXT_IOREC *iorec, WORD baud, WORD ctrl, WO
     UBYTE mode_reg_num      = port == 0 ? DUART_MRA  : DUART_MRB;
     UBYTE clock_sel_reg_num = port == 0 ? DUART_CSRA : DUART_CSRB;
     UBYTE command_reg_num   = port == 0 ? DUART_CRA  : DUART_CRB;
-    UBYTE rts_output_bit    = port == 0 ? DUART_OP0_RTS : DUART_OP1_RTS; 
+    UBYTE rts_output_bit    = port == 0 ? DUART_OP0_RTS : DUART_OP1_RTS;
     ULONG old;
 
     if (baud == -2)     /* wants current baud rate */
@@ -1180,11 +1180,11 @@ static ULONG rsconf_duart(UBYTE port, EXT_IOREC *iorec, WORD baud, WORD ctrl, WO
 #else
     write_duart(DUART_ACR, 0xf0); /* ACR[7] = 1, timer mode, x16 prescaler */
 #endif
-    /* For hardware flow control purposes, we need to *set* the RTS output port bit (bit 0 for 
+    /* For hardware flow control purposes, we need to *set* the RTS output port bit (bit 0 for
      * port A, bit 1 for port B). Setting an output port bin cause the actual pin
-     * to be zero, which is how we want to start (i.e., active-low RTS is asserted). 
+     * to be zero, which is how we want to start (i.e., active-low RTS is asserted).
      *
-     * If hardware flow control is disabled, this action has no effect because no one will 
+     * If hardware flow control is disabled, this action has no effect because no one will
      * be paying attention to RTS/CTS anyway.
      */
     write_duart(DUART_SETOPR, rts_output_bit);
@@ -1519,7 +1519,7 @@ void init_serport(void)
     iorecDUARTB.out.buf = obufDUARTB;
 #endif /* CONF_WITH_DUART_CHANNEL_B */
     if (has_duart) {
-        rsconfDUARTA(DEFAULT_BAUDRATE, 0, 0x88, 0, 0, 0);
+        //rsconfDUARTA(DEFAULT_BAUDRATE, 0, 0x88, 0, 0, 0);
 #if CONF_WITH_DUART_CHANNEL_B
         rsconfDUARTB(DEFAULT_BAUDRATE, 0, 0x88, 0, 0, 0);
 	bconoutDUARTB(0, '*');
@@ -1537,7 +1537,7 @@ void init_serport(void)
 #endif
 
 #if !CONF_SERIAL_IKBD
-    (*rsconfptr)(DEFAULT_BAUDRATE, 0, 0x88, 1, 1, 0);
+    //(*rsconfptr)(DEFAULT_BAUDRATE, 0, 0x88, 1, 1, 0);
 #endif
 
 #if CONF_WITH_MFP_RS232

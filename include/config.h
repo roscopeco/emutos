@@ -960,7 +960,7 @@
 #endif
 
 /*
- * Set CONF_WITH_DUART_CHANNEL_B to 1 to enable the second port on 
+ * Set CONF_WITH_DUART_CHANNEL_B to 1 to enable the second port on
  * the MC68681. ColdFile UARTS are a subset of the MC68681 and don't
  * support the second channel.
  */
@@ -976,7 +976,7 @@
 # define CONF_WITH_DUART_EXTENDED_BAUD_RATES 0
 #endif
 /*
- * Set CONF_DUART_TIMER_C to 1 to simulate Timer C using the 
+ * Set CONF_DUART_TIMER_C to 1 to simulate Timer C using the
  * timer available on the MC68681 DUART.
  */
 #ifndef CONF_DUART_TIMER_C
