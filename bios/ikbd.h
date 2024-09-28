@@ -98,6 +98,9 @@ struct keytbl {
 void kbd_init(void);
 
 /* called by ikbdvec to handle key events */
+#ifdef MACHINE_ROSCO_V2
+void ikbd_int(UBYTE scancode);
+#endif
 void kbd_int(UBYTE scancode);
 
 /* called by timer C int to handle key repeat */

@@ -814,6 +814,13 @@ _duart_interrupt:
         btst.b  #3, d0                // Is Counter Ready (bit 3) set?
         beq     duart_check_rx_2      //    No, skip timer handling code
 
+	cmpi.b	#5,vblcnt
+	bmi	skipvbl
+	bsr _int_vbl
+	move.b  #0,vblcnt
+skipvbl:	
+	addi.b  #1,vblcnt
+                
 // Call vector_5ms
 // As it will return with RTE, we must setup a proper stack frame
         tst.w   _longframe
@@ -1503,6 +1510,9 @@ _keyclick:
 // ==== Variables ============================================================
 
         .bss
+
+vblcnt: .ds.b   1
+
         .even
 
         .ds.w    256            // this stack is only used by dopanic()

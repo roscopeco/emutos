@@ -40,7 +40,7 @@
 #include "serport.h"
 #include "amiga.h"
 #include "lisa.h"
-
+#include "rosco2.h"
 
 /* forward declarations */
 static WORD convert_scancode(UBYTE *scancodeptr);
@@ -719,6 +719,60 @@ static WORD convert_scancode(UBYTE *scancodeptr)
 }
 
 
+volatile UBYTE mouse_state = 0;
+SBYTE rosco2_mouse_packet[3];    
+//called from DUART Channel B interrupt when scancode received
+void ikbd_int(UBYTE scancode){
+    //KDEBUG(("Key-scancode: 0x%02x, mouse state: 0x%02x\n", scancode, mouse_state));
+#ifdef DANODUS_KEYBOARD
+    switch(mouse_state){
+        case 0:
+            if (scancode == 'M')
+                mouse_state = 1;
+            break;
+    	case 1:
+    		rosco2_mouse_packet[0] = (SBYTE)scancode; 
+    		mouse_state = 2;
+    		return;
+    		break;
+    	case 2: 		
+    		rosco2_mouse_packet[1] = (SBYTE)scancode;
+    		mouse_state = 3;
+    		return;
+    		break;
+    	case 3:
+    		rosco2_mouse_packet[2] = (SBYTE)scancode;
+    		call_mousevec(rosco2_mouse_packet);
+    		mouse_state = 0;
+    		return;
+    		break;
+    }
+#else
+    switch(mouse_state){
+        case 0:
+            if (scancode == 0x60) {
+                mouse_state = 1;
+            }
+            break;
+    	case 1:
+    		rosco2_mouse_packet[mouse_state - 1] = (SBYTE)((scancode & 0x02) | 0xFC);
+    		mouse_state++;
+    		return;
+    	case 2:
+    	case 3:
+    		rosco2_mouse_packet[mouse_state - 1] = (SBYTE)scancode; 
+    		mouse_state++;
+    		return;
+    	case 4:
+    		// ignore scancode, it is Z position
+    		call_mousevec(rosco2_mouse_packet);
+    		mouse_state = 0;
+    		return;
+    }
+#endif
+}
+
+
 /*
  * kbd_int : called by the interrupt routine for key events.
  */
@@ -967,6 +1021,9 @@ void ikbd_writeb(UBYTE b)
 #elif defined(MACHINE_AMIGA)
     amiga_ikbd_writeb(b);
 #endif
+#ifdef MACHINE_ROSCO_V2
+    rosco2_ikbd_writeb(b);
+#endif
 }
 
 /* send a word to the IKBD as two bytes - for general use */
@@ -981,7 +1038,9 @@ void ikbd_writew(WORD w)
  */
 static UBYTE ikbd_readb(WORD timeout)
 {
-#if CONF_WITH_IKBD_ACIA
+#ifdef MACHINE_ROSCO_V2
+	return rosco2_ikbd_readb(timeout);
+#elif CONF_WITH_IKBD_ACIA
     WORD i;
 
     /* We have to use a timeout to avoid waiting forever
@@ -1032,6 +1091,9 @@ static UBYTE ikbd_readb(WORD timeout)
  */
 static void ikbd_reset(void)
 {
+#ifdef ROSCO_M68K_IO
+    // ikbd_writeb(0x11);  // mode set EMUTOS
+#else
     UBYTE version;
 
     ikbd_writew(0x8001);            /* reset */
@@ -1053,6 +1115,7 @@ static void ikbd_reset(void)
     /* eat any pending keyboard bytes */
     while(ikbd_readb(5))    /* timeout long enough for pending data */
         ;
+#endif
 }
 
 /*
@@ -1083,6 +1146,10 @@ void kbd_init(void)
 
 #ifdef MACHINE_LISA
     lisa_kbd_init();
+#endif
+
+#ifdef MACHINE_ROSCO_V2
+    rosco2_ikbd_init();
 #endif
 
     /* initialize the IKBD */

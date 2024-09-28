@@ -39,6 +39,10 @@ struct param rel_pblock;        /* mouse parameter block */
 
 void Initmous(WORD type, struct param *param, PFVOID newvec)
 {
+#ifdef ROSCO_M68K_IO
+    if (newvec != NULL)
+        kbdvecs.mousevec = newvec;  /* set mouse vector */
+#else    
     long retval = -1;           /* ok, if it stays so... */
     struct param *p = param;   /* pointer to parameter block */
 
@@ -119,4 +123,5 @@ void Initmous(WORD type, struct param *param, PFVOID newvec)
     } else {                    /* if error */
         kbdvecs.mousevec = just_rts;    /* set dummy vector */
     }
+#endif
 }

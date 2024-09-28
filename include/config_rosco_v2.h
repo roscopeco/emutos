@@ -19,7 +19,7 @@
 # endif
 
 # ifndef CONF_STRAM_SIZE
-#  define CONF_STRAM_SIZE 11*64*1024
+#  define CONF_STRAM_SIZE 13*1024*1024
 # endif
 # ifndef CONF_WITH_ALT_RAM
 #  define CONF_WITH_ALT_RAM 0
@@ -76,6 +76,10 @@
 # endif
 # ifndef DETECT_NATIVE_FEATURES
 #  define DETECT_NATIVE_FEATURES 0
+# endif
+
+# ifndef ROSCO_M68K_IO
+#  define ROSCO_M68K_IO 1
 # endif
 
 #define DEFAULT_BAUDRATE B115200

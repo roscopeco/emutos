@@ -108,6 +108,8 @@ void mfp_tt_tx_interrupt_handler(void);
 
 #if CONF_WITH_DUART
 #if CONF_WITH_DUART_CHANNEL_B
+LONG bconstatDUARTB(void);
+LONG bconinDUARTB(void);
 LONG bconoutDUARTB(WORD, WORD);
 void duart_rs232_interrupt_handler_channel_b(void);
 #endif
