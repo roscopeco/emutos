@@ -719,7 +719,19 @@ static WORD convert_scancode(UBYTE *scancodeptr)
 }
 
 
-volatile UBYTE mouse_state = 0;
+static inline __attribute__((always_inline)) SBYTE contract(int in) {
+    // there is definitely a better way to do this...
+    if (in > 127) {
+        return 127;
+    } else if (in < -128) {
+        return -128;
+    } else {
+        return (SBYTE)in;
+    }
+}
+
+static UBYTE mouse_state = 0;
+static unsigned char mouse_status = 0;
 SBYTE rosco2_mouse_packet[3];    
 //called from DUART Channel B interrupt when scancode received
 void ikbd_int(UBYTE scancode){
@@ -748,26 +760,61 @@ void ikbd_int(UBYTE scancode){
     		break;
     }
 #else
+    UBYTE temp;
+
     switch(mouse_state){
         case 0:
             if (scancode == 0x60) {
                 mouse_state = 1;
             }
             break;
-    	case 1:
-    		rosco2_mouse_packet[mouse_state - 1] = (SBYTE)((scancode & 0x02) | 0xFC);
-    		mouse_state++;
-    		return;
-    	case 2:
-    	case 3:
-    		rosco2_mouse_packet[mouse_state - 1] = (SBYTE)scancode; 
-    		mouse_state++;
-    		return;
-    	case 4:
-    		// ignore scancode, it is Z position
-    		call_mousevec(rosco2_mouse_packet);
-    		mouse_state = 0;
-    		return;
+        case 1:
+            // KDEBUG(("Mouse 1: 0x%02x (%d)\n", scancode, scancode));
+
+            mouse_status = scancode;
+            temp = 0xfc;                // Packet will be ignored unless & 0xf8 == 0xf8
+                                        // vdi_asm.S line 246
+
+            // Swap buttons, because reasons
+            if (scancode & 0x01) {
+                temp |= 0x02;
+            }
+            if (scancode & 0x02) {
+                temp |= 0x01;
+            }
+
+            rosco2_mouse_packet[0] = temp;
+            mouse_state++;
+            break;
+        case 2:
+            // KDEBUG(("Mouse 2: 0x%02x (%d)\n", scancode, scancode));
+
+            if (mouse_status & 0x10) {
+                rosco2_mouse_packet[1] = 0 - (SBYTE)scancode;
+            } else {
+                rosco2_mouse_packet[1] = (SBYTE)scancode;
+            }
+
+            mouse_state++;
+            break;
+        case 3:
+            // KDEBUG(("Mouse 3: 0x%02x (%d)\n", scancode, scancode));
+
+            // Y is inverted...
+            if ((mouse_status & 0x20)) {
+                rosco2_mouse_packet[2] = (SBYTE)scancode;
+            } else {
+                rosco2_mouse_packet[2] = 0 - (SBYTE)scancode;
+            }
+
+            mouse_state++;
+            break;
+        case 4:
+            // ignore scancode, it is Z position
+            // KDEBUG(("Mouse 4: [0x%02x (%d) : 0x%02x (%d) : 0x%02x (%d)]\n", rosco2_mouse_packet[0], rosco2_mouse_packet[0], rosco2_mouse_packet[1],rosco2_mouse_packet[1], rosco2_mouse_packet[2], rosco2_mouse_packet[2]));
+            call_mousevec(rosco2_mouse_packet);
+            mouse_state = 0;
+            break;
     }
 #endif
 }
